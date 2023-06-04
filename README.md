@@ -281,7 +281,6 @@ In this step, you deploy the API that you created to a stage called prod.
 4. Save the file as "index"
 
 ```html
-<!DOCTYPE html>
 <html>
 <head>
   <title>Gaming Search Engine</title>
