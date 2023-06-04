@@ -343,6 +343,7 @@ Verify: Right click the saved file and view the properties. It should be of HTML
 <img width="271" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/6ed2d8fe-79d7-4541-a9c6-f55d1db91aa1">
 
 5. Turn the file into a "compressed (zipped) folder". Again, keep the name as "index"
+
 ***Windows: Right Click, Send to, "Compressed (zipped) folder"***
 ***IOS: Right Click, Choose "Compress"***
 
