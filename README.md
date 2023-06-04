@@ -4,7 +4,7 @@
 
 ## Lab Overview and Highlevel
 
-In this lab we will create a Gaming Search Engine from scratch in the AWS console using services/components like DynamoDB, Amplify, and API gateway.
+In this lab we will create a Gaming Search Engine from scratch in the AWS console using services/components like DynamoDB, Amplify, and API Gateway. Our Website will be hosted on a static HTML website. The HTML website will be powered by Amplify and will function from the API we create in API Gateway.
 
 **VPC Architecture Design**
 
