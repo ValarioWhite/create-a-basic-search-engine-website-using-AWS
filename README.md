@@ -91,6 +91,7 @@ To create an execution role
     }
     ```
 
+DONE
 
 ### Step 3 - Create Lambda Function
 
@@ -98,188 +99,139 @@ To create an execution role
 1. Go to the Lambda console
 2. Click "Create function" in AWS Lambda Console
 
-![Create function](https://user-images.githubusercontent.com/126350373/221980515-da86c483-004e-449b-93f6-5f9388e959e8.png)
+<img width="941" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/98ff6774-c903-4c4f-92bb-c5582cc2f395">
 
 
-2. Select "Author from scratch". Use name **LambdaCRUDOverHTTPS** , select **Python 3.7** as Runtime. Under Permissions, select "Use an existing role", and select **lambda-apigateway-dynamodb-role** that we created, from the drop down
+2. Select "Author from scratch". Use name **GamingSearchEngine** , select **Python 3.8** as Runtime. Under Permissions, select "Use an existing role", and select **lambda-apigateway-dynamodb-role** that we created, from the drop down
 
 3. Click "Create function"
 
-![Lambda basic information](https://user-images.githubusercontent.com/126350373/221984406-df5c15dc-1c36-4bb8-81e5-ea9986025a9d.png)
+<img width="919" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/b5943d7b-cf16-4b22-bdef-ef94109b6c10">
 
 4. Replace the existing sample code with the following code snippet and click "Deploy"
 
 **Python CRUD Operation Code**
+
 ```python
 import boto3
 import json
 
-print('Loading function')
+def lambda_handler(event, context):
+    # Create a DynamoDB client
+    dynamodb = boto3.resource('dynamodb')
 
-def lambda_handler(event,context):
-    '''Provide an event that contains the following keys:
+    # Retrieve the partition key value from the event
+    partition_key_value = event['Name of Game']
 
-      - operation: one of the operations in the operations dict below
-      - tableName: required for operations that interact with DynamoDB
-      - payload: a parameter to pass to the operation being performed
-    '''
-    
-    print("Received event: " + json.dumps(event, indent=1))
-     
-    operation = event['operation']
-    
+    # Get the DynamoDB table
+    table = dynamodb.Table('GamingSearchEngine')
 
-    if 'tableName' in event:
-        dynamo = boto3.resource('dynamodb').Table(event['tableName'])
+    # Call the get_item operation
+    response = table.get_item(
+        Key={
+            'Name of Game': partition_key_value
+        }
+    )
 
-    operations = {
-    #CRUD operations shown below:
-        'create': lambda x: dynamo.put_item(**x),
-        'read': lambda x: dynamo.get_item(**x),
-        'update': lambda x: dynamo.update_item(**x),
-        'delete': lambda x: dynamo.delete_item(**x),
-        'echo': lambda x: x
-    }
-
-    if operation in operations:
-        return operations[operation](event.get('payload'))
+    # Process the response
+    if 'Item' in response:
+        item = response['Item']
+        # Do something with the item
+        item_data = json.loads(json.dumps(item))  # Convert item to JSON-compatible format
+        return {
+            'statusCode': 200,
+            'body': item_data
+        }
     else:
-        raise ValueError('Unrecognized operation "{}"'.format(operation))
+        return {
+            'statusCode': 404,
+            'body': 'Item not found'
+        }
+
         
 ```
-![Lambda Code](https://user-images.githubusercontent.com/126350373/221973523-c46347aa-2dfb-47d0-874e-a8c55d1c2456.png)
+<img width="608" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/ebc0decd-f1e9-4dca-9f35-f6b30e0e0303">
+
+DONE
 
 ### Step 4 - Test Lambda Function
 
-Let's test our newly created function. We will test our **"echo"** operation AND our **"create"** operation. **"echo"** is an operation that should output whatever the request/input/event submitted. **"create"** is an operation that will create a real record into the DynamoDB table (*apigateway-lambda-crud*) we created in the first step.  
+Let's test our newly created function. Testing this function will make sure we will receive gaming information back when we search for the game.
 
-**"echo" Operation TEST**
+**Get Information for Minecraft Game**
 1. Click the arrow on the "Test" button and click "Configure test events"
 
 ![Configure test events](https://user-images.githubusercontent.com/126350373/221981236-6632840f-3f45-4373-9e2c-f1644699b67a.png)
 
-2. Paste the following JSON into the event. The field "operation" dictates what the lambda function will perform. In this case, it'd simply return the payload from input event as output. Click "Create" to save.
+2. Name the event "Test" then Paste the following JSON into the event. Afterwards, click "Save" to create.
 ```json
 {
-  "operation": "echo",
-  "payload": {
-    "testkey1": "testvalue1",
-    "testkey2": "testvalue2"
-  }
+  "Name of Game" : "Minecraft"
 }
 ```
-![Save test event](https://user-images.githubusercontent.com/126350373/221981831-b5ad9171-fb46-4747-a90e-a6ec0f5f168c.png)
+<img width="308" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/8e953640-2095-4c76-97eb-5884a9211445">
 
 
 3. Click "Test", and it will execute the test event. You should see the output in the console
 
-![Successful Test](https://user-images.githubusercontent.com/126350373/221988503-418d8ea0-a8b1-452c-badb-379bf3456d3c.png)
+<img width="611" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/b468e0a8-1ee9-453f-9873-edca8fe61f70">
 
-
-### Step 4 - Create NAT Gateway (NATGW)
-
-**For high availability we will create 2 NATGW. One in each AZ (One in Public Subnet A and One in Public Subnet B)**
-1. Open the VPC Console
-2. Click on "NAT gateways" on the left-hand panel 
-3. Click "Create NAT gateway" button in the top right hand corner
-4. Name the 1st NATGW "NATGW A", Select "Public Subnet A" that we created in a previous step, click "Allocate Elastic IP" button, and click "Create NAT gateway" button in the bottom right hand corner
-
-![image](https://user-images.githubusercontent.com/126350373/228589852-71cb71e1-3edb-4149-af80-899e10deed72.png)
-
-5. Go back to the NATGW dashboard and click "Create NAT gateway" button in the top right hand corner
-6. Name the 2nd NATGW "NATGW B", Select "Public Subnet B" that we created in a previous step, click "Allocate Elastic IP" button, and click "Create NAT gateway" button in the bottom right hand corner
 DONE
-
-![image](https://user-images.githubusercontent.com/126350373/228591148-56c2e540-32b6-42cf-93c3-b36fc178eb65.png)
-
-**Connect Route Tables to NATGW**
-1. Open the VPC Console
-2. Click on "Route tables" on the left-hand panel 
-3. Select "Private Route Table A"
-4. Click the "Actions" dropdown button at the top right hand corner and click "Edit routes"
-5. Click "Add route", for Destination route select "0.0.0.0/0", for Target select "NAT Gateway" and select "NATGW A", click "Save changes" button at the bottom right hand corner.
-
-![image](https://user-images.githubusercontent.com/126350373/228594577-b4956203-547e-4761-8d27-cd6ad636d462.png)
-
-6. Go back to the Route tables dashboard
-7. Select "Private Route Table B"
-8. Click "Actions" dropdown button at the top right hand corner and click "Edit routes"
-9. Click "Add route", for Destination route select "0.0.0.0/0", for Target select "NAT Gateway" and select "NATGW B", click "Save changes" button at the bottom right hand corner.
-DONE
-
-![image](https://user-images.githubusercontent.com/126350373/228595882-30cdb64f-ee69-427b-beb9-b2c67e6c7df9.png)
-
-### NOTE: The default NACL allows all inbound and all outbound. We will not change the default NACL settings in this lab. Found in VPC console.
-
-**NACL Inbound Rules**
-
-![image](https://user-images.githubusercontent.com/126350373/228600720-8b890a6d-c46c-4625-967f-b6a6d439e411.png)
-
-**NACL Outbound Rules**
-
-![image](https://user-images.githubusercontent.com/126350373/228600965-4d9aef6e-e43e-409b-bbdc-e8f98bb7e3ce.png)
-
-
 
 ### Step 5 - Create API and Deploy API
 
 **To create the API**
 1. Go to API Gateway console
-2. Scroll down to REST API and click "Build"
+2. Click "Create API" 
+3. Scroll down to REST API and click "Build"
 
 ![Build API](https://user-images.githubusercontent.com/126350373/221991046-d4a3f54c-5f82-48c9-9941-4cf100559302.png)
 
-3. Make sure to select "New API" and Give the API name as **DynamoOperations**, keep everything as is, click "Create API"
+3. Make sure to select "New API" and Give the API name as **GamingSearchEngine**, keep everything as is, click "Create API"
 
-![Create REST API](https://user-images.githubusercontent.com/126350373/221992297-49184253-380d-4ee7-afb3-cec597b67dd7.png)
+<img width="972" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/34725232-2623-4dfd-890b-8b4fd5d1aa27">
 
 4. Each API is collection of resources and methods that are integrated with backend HTTP endpoints, Lambda functions, or other AWS services. Typically, API resources are organized in a resource tree according to the application logic. At this time you only have the root resource, but let's add a resource next 
 
-Click "Actions", then click "Create Resource"
+Click "Actions", then click "Method"
 
-![Create API resource](https://user-images.githubusercontent.com/126350373/222020359-db68ce6e-65ca-4eee-ae8b-b6d65351ee21.png)
+<img width="343" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/eb9cae2c-ce40-483d-bb1e-3a7e0f8b4236">
 
-5. Input **DynamoOperations** in the Resource Name, Resource Path will get populated. Click "Create Resource"
+5. Select "POST" in the dropdown and click the check button
 
-![Create resource](https://user-images.githubusercontent.com/126350373/221992928-d7646703-bda8-477e-bb92-a71a9834db7d.png)
+<img width="293" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/d99078ac-3e44-403e-b86e-ef830567fa85">
 
-6. Let's create a POST Method for our API. With the "/dynamoooperations" resource selected, Click "Actions" again and click "Create Method". 
+6. Keep the integration type as Lambda Function. Make sure the Region is the same as your Lambda Function and DynamoDB (It should be because of the default settings). 
 
-![Create resource method](https://user-images.githubusercontent.com/126350373/221993094-1fa244ec-91c9-4c74-a308-d0c927604681.png)
+7. In Lambda Function text bar type in "GamingSearchEngine" and select that lambda function we created in the previous step. Click Save then OK.
 
-7. Select "POST" from drop down , then click checkmark
+<img width="740" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/cb4e5dab-f662-420a-ba76-a070b2ba78ec">
 
-![Create resource method](https://user-images.githubusercontent.com/126350373/221993423-c955c2e1-7f6c-40ce-82aa-7062359c5679.png)
+8. Click the "Action" dropdown and click Enable CORS.
 
-8. The integration will come up automatically with "Lambda Function" option selected. Select **LambdaCRUDOverHTTPS** function that we created earlier. As you start typing the name, your function name will show up. Select and click "Save". A popup window will come up to add resource policy to the lambda to be invoked by this API. Click "Ok"
+<img width="314" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/28bd7b5a-687f-4603-b5e3-f7ae93191e9a">
 
-![Create lambda integration](https://user-images.githubusercontent.com/126350373/221993769-f5291680-0647-492b-883b-0fdbe2a13891.png)
+9. Make sure POST is checked under "Methods" then click the "Enable CORS and replace existing CORS headers" button at the bottom right. Then click "Yes, replace existin values"
 
-Our API-Lambda integration is done!
+<img width="802" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/a061ada3-d98f-48bd-be02-5886d7bf5b65">
 
-**Deploy the API**
+<img width="340" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/a94845ba-7289-4b5b-a987-d6ebfb282625">
 
-In this step, you deploy the API that you created to a stage called prod.
+10. Click the "Action" dropdown and click Deploy API. Click deployment stage
 
-1. Click "Actions", select "Deploy API"
+<img width="244" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/27519321-e00c-444f-b8a3-e97309d61958">
 
-![Deploy API](https://user-images.githubusercontent.com/126350373/222020622-f3317982-5d0a-492b-a418-235350ee05d4.png)
+<img width="226" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/c7487aca-f7a2-43cd-b977-0459d0d151f6">
 
-2. Now it is going to ask you about a stage. Select "[New Stage]" for "Deployment stage". Give "Prod" as "Stage name". Click "Deploy"
+<img width="226" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/a3e1e871-dc31-4b0c-91a4-d2ec4cccd30d">
 
-![Deploy API to Prod Stage](https://user-images.githubusercontent.com/126350373/221994238-db3d8c5a-8102-4a9d-bb6d-34a6e6cca617.png)
+11. Keep your Invoke URL handy. We will use this in the next step.
 
-3. We're all set to run our solution! To invoke our API endpoint, we need the endpoint url. In the "Stages" screen, expand the stage "Prod", select "POST" method, and copy the "Invoke URL" from screen (we are going to need it in Step 7)
+<img width="881" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/394198be-b26c-4d34-a9d4-42e2e353ab43">
 
-![Copy Invoke URL](https://user-images.githubusercontent.com/126350373/222017833-9a7e2780-dd44-4ce9-afa2-17c6bc5b2fdd.png)
+### Step 6 - Update the HTML Code and Save It
 
-### Step 7 - Update the HTML Code and Save It
-
-1. Copy the HTML code shown below, 
-2. Paste it to Notepad (for windows), TextEdit (for apple), or a source code editor like Visual Studio Code (download the software from a Google Search), and 
-3. Udate the "INVOKE URL" in the code with your REST API Invoke URL from API Gateway in the previous step.
-4. Save the file as "index"
-
+1. Copy the HTML code shown below
 ```html
 <html>
 <head>
@@ -377,28 +329,64 @@ In this step, you deploy the API that you created to a stage called prod.
 
 ```
 
+2. Paste it to Notepad (for windows), TextEdit (for apple), or a source code editor like Visual Studio Code (download the software from a Google Search) 
+
+3. Update the "INVOKE URL" in the code with your REST API Invoke URL from API Gateway in the previous step.
+
+Insert your Invoke URL here. Keep the quotations around your link as well.
+<img width="470" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/16b6daea-cdd7-4efc-abb4-c79001ddbe69">
+
+4. Save the file as "index" of html type. Thus, you may have to save it as "index.html". 
+
+Verify: Right click the saved file and view the properties. It should be of HTML type of file with the name "index"
+<img width="271" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/6ed2d8fe-79d7-4541-a9c6-f55d1db91aa1">
+
+5. Turn the file into a "compressed (zipped) folder". Again, keep the name as "index"
+***Windows: Right Click, Send to, "Compressed (zipped) folder"***
+***IOS: Right Click, Choose "Compress"***
 
 
-### Step 8 - Create Website using Amplify
 
-1. Insert Step here
+### Step 7 - Create Website using Amplify
 
-### Step 9 - Test the Webpage
+1. Go to the AWS Amplify console
+2. Click "GET STARTED" and then click get started for "Host your web app" under "Amplify Hosting"
 
-1. Insert step here
+<img width="374" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/ac77b331-f131-4c98-91e9-78a9ce8a8839">
 
+<img width="406" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/0f5e7504-20f6-4ae8-8ff5-41022f256c61">
+
+3. Click "Deploy without Git provider" option then click "Continue"
+<img width="670" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/ddbb458e-a8e7-4c63-984c-4385022f7866">
+
+4. Name the app "GamingSearchEngine", Name the environment "dev", then drag and drop the zipped "index" file that was saved in the previous step. Then click "Save and deploy".
+<img width="428" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/f623bec5-3997-4c64-b074-c250bd288ca9">
+
+5. Once deployed, click the domain URL. You should be directed to the website we created via the HTML code.
+<img width="836" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/e2e92244-6647-430c-8f2b-85b8a7101905">
+
+HTML Website we created
+<img width="943" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/f5d07ad4-d224-4d33-9f97-f4558e1679ea">
+
+
+### Step 8 - Test the Webpage
+
+1. Type in "Minecraft" and you should receive a response back. Feel free to test the other game names as well (Must type the names of them exactly how they are in DynamoDB - Yes, Case Sensitive).
+<img width="947" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/28799a92-fc31-4f33-9dd5-d79f561b1d34">
+
+Congradulations, you've created a basic search engine.
 
 ## Clean Up
 
-### Step 8 - Delete the Web Hosting App - Amplify Console
+### Step 9 - Delete the Web Hosting App - Amplify Console
 
 <img width="844" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/46392828-0693-4d31-aadf-88e8343a3add">
 
-### Step 9 - Delete the REST API - API Gateway Console
+### Step 10 - Delete the REST API - API Gateway Console
 
 <img width="845" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/2852dd5f-e476-4a93-8dfb-d6343e0a6f11">
 
-### Step 10 - Delete the Lambda Function - Lambda Console
+### Step 11 - Delete the Lambda Function - Lambda Console
 
 <img width="814" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/239c3afe-8520-4556-9a70-204ccd4af7c0">
 
