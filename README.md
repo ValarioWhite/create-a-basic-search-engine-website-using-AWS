@@ -334,6 +334,7 @@ Click "Actions", then click "Method"
 3. Update the "INVOKE URL" in the code with your REST API Invoke URL from API Gateway in the previous step.
 
 Insert your Invoke URL here. Keep the quotations around your link as well.
+
 <img width="470" alt="image" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/16b6daea-cdd7-4efc-abb4-c79001ddbe69">
 
 4. Save the file as "index" of html type. Thus, you may have to save it as "index.html". 
