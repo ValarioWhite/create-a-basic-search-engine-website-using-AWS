@@ -345,6 +345,7 @@ Verify: Right click the saved file and view the properties. It should be of HTML
 5. Turn the file into a "compressed (zipped) folder". Again, keep the name as "index"
 
 ***Windows: Right Click, Send to, "Compressed (zipped) folder"***
+
 ***IOS: Right Click, Choose "Compress"***
 
 
