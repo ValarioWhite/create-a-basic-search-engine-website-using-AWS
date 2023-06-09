@@ -8,7 +8,7 @@ In this lab we will create a Gaming Search Engine (with a database of 5 games) f
 
 **VPC Architecture Design**
 
-INSERT ARCHITECTURAL DESIGN
+<img width="629" alt="Architecture Diagram" src="https://github.com/ValarioWhite/create-a-basic-search-engine-website-using-AWS/assets/126350373/f54077ac-9e77-4494-8174-f103f9bf3fe0">
 
 ## Setup
 
