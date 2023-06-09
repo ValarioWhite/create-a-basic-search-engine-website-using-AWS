@@ -1,6 +1,6 @@
 # create-a-basic-search-engine-website-using-AWS
 
-***Click Here for Video Demonstration - insert here***
+***Click Here for Video Demonstration - [(https://youtu.be/qGFdKWbxbcM)](https://youtu.be/qGFdKWbxbcM)***
 
 ## Lab Overview and Highlevel
 
